@@ -1,0 +1,84 @@
+test_set:
+  class: SideChainDataset
+  path: null
+  atom_feature: residue_symbol
+  bond_feature: null
+  residue_feature: null
+  mol_feature: null
+  sanitize: true
+  removeHs: true
+  transform:
+    class: Compose
+    transforms: []
+
+
+task:
+  class: ConfidencePrediction
+  num_sample: 4
+  num_mlp_layer: 3
+  train_chi_id: null
+  schedule_1pi_periodic:
+    class: SO2VESchedule
+    pi_periodic: true
+    annealed_temp: 3
+    cache_folder:  ~/scratch/output/diffpack
+    mode: ode
+  schedule_2pi_periodic:
+    class: SO2VESchedule
+    pi_periodic: false
+    annealed_temp: 3
+    cache_folder:  ~/scratch/output/diffpack
+    mode: ode
+  confidence_model:
+    class: GearNet
+    input_dim: 39
+    hidden_dims: [ 128, 128, 128, 128, 128, 128 ]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: 'sum'
+    num_relation: 6
+    edge_input_dim: 58
+    num_angle_bin: 8
+  sigma_embedding:
+    class: SigmaEmbeddingLayer
+    input_dim: 39
+    hidden_dims: [ 64, 128 ]
+    sigma_dim: 64
+  model:
+    class: GearNet
+    input_dim: 128
+    hidden_dims: [128, 128, 128, 128, 128, 128]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: 'sum'
+    num_relation: 6
+    edge_input_dim: 58
+    num_angle_bin: 8
+  torsion_mlp_hidden_dims: [ 64, 128 ]
+  graph_construction_model:
+    class: GraphConstruction
+    edge_layers:
+      - class: BondEdge
+      - class: SpatialEdge
+        radius: 4.5
+        min_distance: 2
+      - class: KNNEdge
+        k: 10
+        min_distance: 0
+    edge_feature: gearnet
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+engine:
+  gpus: [0] #, 1, 2, 3]
+  batch_size: 32
+  log_interval: 1000
+
+model_checkpoint: ~/scratch/trained_model/diffpack/gearnet_edge_confidence_converted.pth
+
+train:
+  num_epoch: 0

@@ -39,8 +39,8 @@ Most of the configuration is specified in the configuration file. We list some i
 - `num_sample`: Number of samples in diffusion process. Confidence model will decide which sample to use.
 
 ## Running DiffPack
-To use DiffPack for new proteins on your local machine, we provide the necessary configuration files in the config/ folder. 
-For instance, if you have two pdb files 1a3a.pdb and 1a3b.pdb, 
+To use DiffPack for new proteins on your local machine, we provide the necessary configuration files in the `config` folder. 
+For instance, if you have two pdb files `1a3a.pdb` and `1a3b.pdb`, 
 you can run the following command to infer new proteins and save the results in your chosen output folder:
 ```shell
 python script/inference.py -c config/inference_confidence.yaml \

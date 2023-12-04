@@ -102,12 +102,12 @@ class TorsionalDiffusion(tasks.Task, core.Configurable):
         chis = rotamer.get_chis(protein, protein.node_position)  # [num_residue, 4]
 
         # Add noise to chis
-        chis, score_1pi = self.schedule_1pi_periodic.add_noise(chis, t, protein.chi_1pi_periodic_mask)
-        chis, score_2pi = self.schedule_2pi_periodic.add_noise(chis, t, protein.chi_2pi_periodic_mask)
+        chis, score_1pi = self.schedule_1pi_periodic.add_noise(chis, t[protein.residue2graph], protein.chi_1pi_periodic_mask)
+        chis, score_2pi = self.schedule_2pi_periodic.add_noise(chis, t[protein.residue2graph], protein.chi_2pi_periodic_mask)
         score = torch.where(protein.chi_1pi_periodic_mask, score_1pi, score_2pi)
         protein = rotamer.set_chis(protein, chis)  # TODO：maybe have bug
 
-        batch['protein'] = protein
+        batch['graph'] = protein
         batch['chi_id'] = chi_id
         batch['sigma'] = self.schedule_1pi_periodic.t_to_sigma(t)
         batch['score'] = score
@@ -135,14 +135,19 @@ class TorsionalDiffusion(tasks.Task, core.Configurable):
         pred_score = pred * score_norm.sqrt()
 
         # Mask out non-related chis
-        pred_score = pred_score * protein.chi_mask.to(pred_score.dtype)
+        chi_mask = protein.chi_mask[:, chi_id]
+        pred_score = pred_score[chi_mask, chi_id]
+        score_norm = score_norm[chi_mask, chi_id]
 
         return pred_score, score_norm
 
     def target(self, batch):
         protein = batch["graph"]
+        chi_id = batch['chi_id']
         target_score = batch['score']  # Move to protein attribute
-        target_score = target_score * protein.chi_mask
+        chi_mask = protein.chi_mask[:, chi_id]
+        target_score = target_score[chi_mask, chi_id]
+
         return target_score
 
     def evaluate(self, pred, target):
@@ -151,7 +156,7 @@ class TorsionalDiffusion(tasks.Task, core.Configurable):
         target_score = target
 
         metric["diffusion loss"] = ((target_score - pred_score) ** 2 / (score_norm + self.eps)).mean()
-        metric["diffusion base loss"] = (pred_score ** 2 / (score_norm + self.eps)).mean()
+        metric["diffusion base loss"] = (target_score ** 2 / (score_norm + self.eps)).mean()
 
         return metric
 

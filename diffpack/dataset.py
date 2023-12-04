@@ -141,3 +141,25 @@ class SideChainDataset(data.ProteinDataset):
         lines = ["#sample: %d" % len(self)]
         return "%s(  %s)" % (self.__class__.__name__, "\n  ".join(lines))
 
+
+@R.register("datasets.BC40Train")
+class BC40Train(SideChainDataset):
+    processed_file = "bc40_train.pkl.gz"
+
+
+@R.register("datasets.BC40Valid")
+class BC40Valid(SideChainDataset):
+    processed_file = "bc40_valid.pkl.gz"
+
+
+@R.register("datasets.CASP13")
+class CASP13(SideChainDataset):
+    exclude_pdb_files = ['T0999.pdb']
+    processed_file = "casp13.pkl.gz"
+
+
+@R.register("datasets.CASP14")
+class CASP14(SideChainDataset):
+    exclude_pdb_files = ['T1029.pdb', 'T1041.pdb', 'T1044.pdb', 'T1050.pdb',
+                         'T1061.pdb', 'T1076.pdb', 'T1101.pdb', ]
+    processed_file = "casp14.pkl.gz"

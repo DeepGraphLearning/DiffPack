@@ -188,8 +188,8 @@ class SO2VESchedule(SO2Schedule, core.Configurable):
             x_mask (Tensor): Mask of shape :math:`(num_res, 4)`
             t (Tensor): Timesteps of shape :math:`(num_res)`
         """
-        sigmas = self.t_to_sigma(t)
-        noise = torch.randn_like(x) * sigmas.unsqueeze(-1)
+        sigmas = self.t_to_sigma(t).unsqueeze(-1)
+        noise = torch.randn_like(x) * sigmas
         score = torch.tensor(
             self.score(noise.cpu().numpy(), sigmas.cpu().numpy()), device=x.device, dtype=x.dtype
         )
